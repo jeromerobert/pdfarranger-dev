@@ -368,6 +368,7 @@ class PdfArranger(Gtk.Application):
         self.window.connect('delete_event', self.on_quit)
         self.window.connect('focus_in_event', self.window_focus_in_out_event)
         self.window.connect('focus_out_event', self.window_focus_in_out_event)
+        self.window.set_position(Gtk.WindowPosition.CENTER)
 
         if hasattr(GLib, "unix_signal_add"):
             GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, self.close_application)
