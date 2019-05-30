@@ -760,6 +760,7 @@ class PdfArranger(Gtk.Application):
         self.set_unsaved(True)
         for path in selection:
             iter = model.get_iter(path)
+            # TODO: undo/redo
             model.remove(iter)
         path = selection[-1]
         self.iconview.select_path(path)
@@ -830,6 +831,7 @@ class PdfArranger(Gtk.Application):
                                      for p in data]
                     iter_to = self.model.get_iter(ref_to.get_path())
                     for ref_from in ref_from_list:
+                        # TODO: undo/redo
                         row = model[model.get_iter(ref_from.get_path())]
                         if before:
                             model.insert_before(iter_to, row[:])
@@ -837,6 +839,7 @@ class PdfArranger(Gtk.Application):
                             model.insert_after(iter_to, row[:])
                     if context.get_actions() & Gdk.DragAction.MOVE:
                         for ref_from in ref_from_list:
+                            # TODO: undo/redo
                             model.remove(model.get_iter(ref_from.get_path()))
 
                 elif target == 'MODEL_ROW_EXTERN':
@@ -856,6 +859,7 @@ class PdfArranger(Gtk.Application):
     def iv_dnd_data_delete(self, widget, context):
         """ Delete pages from a pdfarranger instance after they have been moved to another instance """
 
+        # TODO: undo/redo
         model = self.iconview.get_model()
         selection = self.iconview.get_selected_items()
         ref_del_list = [Gtk.TreeRowReference.new(model, path) for path in selection]
@@ -1189,6 +1193,7 @@ class PdfArranger(Gtk.Application):
         self.set_unsaved(True)
         indices.reverse()
         new_order = list(range(first)) + indices + list(range(last + 1, len(model)))
+        # TODO: undo/redo
         model.reorder(new_order)
 
     def about_dialog(self, widget, data=None):
