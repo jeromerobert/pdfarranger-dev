@@ -757,19 +757,9 @@ class PdfArranger(Gtk.Application):
         model = self.iconview.get_model()
         selection = self.iconview.get_selected_items()
         selection.sort(reverse=True)
-        self.set_unsaved(True)
-        for path in selection:
-            iter = model.get_iter(path)
-            # TODO: undo/redo
-            model.remove(iter)
-        path = selection[-1]
-        self.iconview.select_path(path)
-        if not self.iconview.path_is_selected(path):
-            if len(model) > 0:  # select the last row
-                row = model[-1]
-                path = row.path
-                self.iconview.select_path(path)
-        self.iconview.grab_focus()
+        a = undo.Delete(self, selection)
+        a.redo()
+        self.undomanager.push(a)
 
     def iv_drag_begin(self, iconview, context):
         """Sets custom icon on drag begin for multiple items selected"""
@@ -852,14 +842,7 @@ class PdfArranger(Gtk.Application):
 
     def iv_dnd_data_delete(self, widget, context):
         """ Delete pages from a pdfarranger instance after they have been moved to another instance """
-
-        # TODO: undo/redo
-        model = self.iconview.get_model()
-        selection = self.iconview.get_selected_items()
-        ref_del_list = [Gtk.TreeRowReference.new(model, path) for path in selection]
-        for ref_del in ref_del_list:
-            path = ref_del.get_path()
-            model.remove(model.get_iter(path))
+        self.clear_selected(None, None, None)
 
     def iv_dnd_motion(self, iconview, context, x, y, etime):
         """Handles the drag-motion signal in order to auto-scroll the view"""

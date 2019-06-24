@@ -4,7 +4,9 @@ do/undo/redo code for all pdfarranger actions
 from gi.repository import Gtk
 from gi.repository import GObject
 
-
+# TODO: cannot use TreeRowReference because they may be invalidated by Delete
+# Must use only TreePath or indices (int)
+# TODO: factorize app.is_unsaved from all undo class to the manager
 class Manager(object):
     """
     Stack of actions
@@ -202,3 +204,33 @@ class Move(object):
                 m.move_after(it_from, iter_to)
         self.app.set_unsaved(self.is_unsaved)
         self.orig=[]
+
+
+class Delete(object):
+    """ Undo/redo removal of pages in the document """
+    def __init__(self, app, path_to_remove):
+        #: A PdfArranger instance
+        self.app = app
+        #: List of Gtk.TreeRowReference to remove
+        self.path_to_remove = path_to_remove
+        self.is_unsaved = app.is_unsaved
+        #: List of removed pages (tuples) and position
+        self.removed=[]
+
+    def redo(self):
+        m = self.app.model
+        for path in self.path_to_remove:
+            indice = path.get_indices()[0]
+            self.removed.append((tuple(m[indice]), indice,))
+            m.remove(m.get_iter(path))
+        self.removed = reversed(self.removed)
+        # TODO: select the last path of the selection
+
+    def undo(self):
+        m = self.app.model
+        cols = range(m.get_n_columns())
+        for row, pos in self.removed:
+            m.insert_with_valuesv(pos, cols, row)
+        self.app.set_unsaved(self.is_unsaved)
+        self.removed=[]
+        # TODO: restore selection
