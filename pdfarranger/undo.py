@@ -100,7 +100,6 @@ class Add(object):
         self.toremove = []
 
     def redo(self):
-        self.toremove = []
         m = self.app.model
         for p in self.pages:
             it = m.append(p)
@@ -120,3 +119,86 @@ class Add(object):
         for p in self.toremove:
             m.remove(m.get_iter(p.get_path()))
         self.app.set_unsaved(self.is_unsaved)
+        self.toremove = []
+
+
+# TODO: Copy and Add classes looks very similar. Try to factorize.
+class Copy(object):
+    """ Undo/redo copy of existing pages in the document """
+    def __init__(self, app, ref_from_list, ref_to, before):
+        #: A PdfArranger instance
+        self.app = app
+        #: List of Gtk.TreeRowReference to copy from
+        self.ref_from_list = ref_from_list
+        #: Gtk.TreeRowReference to copy to
+        self.ref_to = ref_to
+        #: True to insert before insert_ref, False to insert after
+        self.before = before
+        #: Gtk.TreeRowReference list to be removed by undo
+        self.toremove = []
+        self.is_unsaved = app.is_unsaved
+
+    def redo(self):
+        m = self.app.model
+        for ref_from in self.ref_from_list:
+            it_to = m.get_iter(self.ref_to.get_path())
+            it_from = m.get_iter(ref_from.get_path())
+            row = m[it_from][:]
+            if self.before:
+                new_it = m.insert_before(it_to, row)
+            else:
+                new_it = m.insert_after(it_to, row)
+            self.toremove.append(Gtk.TreeRowReference.new(m, m.get_path(new_it)))
+
+    def undo(self):
+        m = self.app.model
+        for p in self.toremove:
+            m.remove(m.get_iter(p.get_path()))
+        self.app.set_unsaved(self.is_unsaved)
+        self.toremove = []
+
+
+class Move(object):
+    """ Undo/redo move of pages in the document """
+    def __init__(self, app, ref_from_list, ref_to, before):
+        #: A PdfArranger instance
+        self.app = app
+        #: List of Gtk.TreeRowReference to copy from
+        self.ref_from_list = ref_from_list
+        #: Gtk.TreeRowReference to copy to
+        self.ref_to = ref_to
+        #: True to insert before insert_ref, False to insert after
+        self.before = before
+        self.is_unsaved = app.is_unsaved
+        #: Positions of tiles before moving
+        self.orig=[]
+
+    def redo(self):
+        m = self.app.model
+        for ref_from in self.ref_from_list:
+            iter_to = m.get_iter(self.ref_to.get_path())
+            orig_path = ref_from.get_path()
+            orig_before = not orig_path.prev()
+            if orig_before:
+                orig_path.next()
+            self.orig.append((Gtk.TreeRowReference.new(m, orig_path), orig_before, ))
+            it_from = m.get_iter(ref_from.get_path())
+            if self.before:
+                m.move_before(it_from, iter_to)
+            else:
+                m.move_after(it_from, iter_to)
+
+    def undo(self):
+        m = self.app.model
+        n = len(self.ref_from_list)
+        for i in range(n-1, -1, -1):
+            ref_from = self.ref_from_list[i]
+            orig_ref, orig_before = self.orig[i]
+            iter_to = m.get_iter(orig_ref.get_path())
+            it_from = m.get_iter(ref_from.get_path())
+            if orig_before:
+                m.move_before(it_from, iter_to)
+            else:
+                m.move_after(it_from, iter_to)
+        self.app.set_unsaved(self.is_unsaved)
+        self.orig=[]

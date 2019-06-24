@@ -829,18 +829,12 @@ class PdfArranger(Gtk.Application):
                     data.sort(key=int, reverse=not before)
                     ref_from_list = [Gtk.TreeRowReference.new(model, Gtk.TreePath(p))
                                      for p in data]
-                    iter_to = self.model.get_iter(ref_to.get_path())
-                    for ref_from in ref_from_list:
-                        # TODO: undo/redo
-                        row = model[model.get_iter(ref_from.get_path())]
-                        if before:
-                            model.insert_before(iter_to, row[:])
-                        else:
-                            model.insert_after(iter_to, row[:])
                     if context.get_actions() & Gdk.DragAction.MOVE:
-                        for ref_from in ref_from_list:
-                            # TODO: undo/redo
-                            model.remove(model.get_iter(ref_from.get_path()))
+                        action = undo.Move(self, ref_from_list, ref_to, before)
+                    else:
+                        action = undo.Copy(self, ref_from_list, ref_to, before)
+                    action.redo()
+                    self.undomanager.push(action)
 
                 elif target == 'MODEL_ROW_EXTERN':
                     pageadder = PageAdder(self)
