@@ -47,6 +47,17 @@ def scale(model, selection, factor):
     return changed
 
 
+# Preserve aspect ratio check box
+# Relative vs absolute mode
+# Absolute mode force all pages to be the same size (GtkRadioButton+GtkStack)
+# In relative mode: sqrt(2)^n mode vs free scale factor mod
+#  -> 2 fields (width/height) with either % as label or ×√2
+# In absolute mode: free size mode vs predefined paper size mode
+# In case of predefined paper size and keep aspect ratio, ensure page is equals
+# or smaller than standard paper size
+# If all selected pages have the same size switching between absolute and relative
+# should preserve values
+# values are stored in relative mode so standard page size should be evaluated with a tolerance
 class _LinkedSpinButton(Gtk.SpinButton):
     """ A spin button which can be bound to an other button """
 
