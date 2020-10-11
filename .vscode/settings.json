@@ -1,0 +1,13 @@
+{
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.banditEnabled": true,
+    "python.pythonPath": "env/bin/python",
+    "python.linting.flake8Enabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.linting.prospectorEnabled": true,
+    "python.linting.pycodestyleEnabled": true,
+    "python.linting.pylamaEnabled": true,
+    "cmake.configureOnOpen": false,
+    "python.formatting.provider": "black"
+}
