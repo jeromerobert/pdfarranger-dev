@@ -14,6 +14,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+import gi
 import os
 import shutil  # for file operations like whole directory deletion
 import sys  # for processing of command line args
@@ -75,8 +76,6 @@ WEBSITE = 'https://github.com/pdfarranger/pdfarranger'
 if os.name == 'nt':
     import keyboard  # to get control key state when drag to other instance
     os.environ['GDK_WIN32_USE_EXPERIMENTAL_OLE2_DND'] = 'true'
-
-import gi
 
 # check that we don't need GObject.threads_init()
 gi.check_version('3.10.2')
