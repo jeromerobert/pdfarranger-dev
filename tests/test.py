@@ -36,6 +36,10 @@ You may need to run the following commands to run thoses tests in your current s
 * gsettings set org.gnome.desktop.interface toolkit-accessibility true
 
 Tests need to be run with default window size (i.e rm ~/.config/pdfarranger/config.ini)
+
+Some tips:
+
+* Use to print widget tree (names and roles) self._app().dump()
 """
 
 
@@ -323,7 +327,6 @@ class TestBatch1(PdfArrangerTest):
 
 
 class TestBatch2(PdfArrangerTest):
-    LAST=True
     def test_01_open_empty(self):
         from dogtail.config import config
         config.searchBackoffDuration = 1
@@ -372,6 +375,32 @@ class TestBatch2(PdfArrangerTest):
         self._wait_cond(lambda: dialog.dead)
 
     def test_07_quit(self):
+        self._app().child(roleName="layered pane").keyCombo("<ctrl>q")
+        dialog = self._app().child(roleName="alert")
+        dialog.child(name="Don’t Save").click()
+        # check that process actually exit
+        self._process().wait(timeout=22)
+
+
+class TestBatch3(PdfArrangerTest):
+    # Kill X11 after that batch
+    LAST=True
+    def test_01_open_encrypted(self):
+        from dogtail.config import config
+        config.searchBackoffDuration = 1
+        self.__class__.pdfarranger = PdfArrangerManager(["tests/test_encrypted.pdf"])
+        # check that process is actually running
+        self.assertIsNone(self._process().poll())
+        app = self._app()
+        # Now let's go faster
+        config.searchBackoffDuration = 0.1
+        dialog = app.child(roleName="dialog")
+        passfield = dialog.child(roleName="password text")
+        passfield.text = "foobar"
+        dialog.child(name="OK").click()
+        self._wait_cond(lambda: dialog.dead)
+
+    def test_03_quit(self):
         self._app().child(roleName="layered pane").keyCombo("<ctrl>q")
         dialog = self._app().child(roleName="alert")
         dialog.child(name="Don’t Save").click()
