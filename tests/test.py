@@ -393,7 +393,9 @@ class TestBatch3(PdfArrangerTest):
     def test_01_open_encrypted(self):
         from dogtail.config import config
         config.searchBackoffDuration = 1
-        self.__class__.pdfarranger = PdfArrangerManager(["tests/test_encrypted.pdf"])
+        filename = os.path.join(self.__class__.tmp, "other_encrypted.pdf")
+        shutil.copyfile("tests/test_encrypted.pdf", filename)
+        self.__class__.pdfarranger = PdfArrangerManager([filename])
         # check that process is actually running
         self.assertIsNone(self._process().poll())
         app = self._app()
@@ -406,9 +408,7 @@ class TestBatch3(PdfArrangerTest):
         self._wait_cond(lambda: dialog.dead)
 
     def test_02_import_wrong_pass(self):
-        filename = os.path.join(self.__class__.tmp, "other_encrypted.pdf")
-        shutil.copyfile("tests/test_encrypted.pdf", filename)
-        filechooser = self._import_file(filename)
+        filechooser = self._import_file("tests/test_encrypted.pdf")
         dialog = self._app().child(roleName="dialog")
         passfield = dialog.child(roleName="password text")
         passfield.text = "wrong"
@@ -423,6 +423,10 @@ class TestBatch3(PdfArrangerTest):
     def test_03_quit(self):
         self._app().child(roleName="layered pane").keyCombo("<ctrl>q")
         dialog = self._app().child(roleName="alert")
-        dialog.child(name="Don’t Save").click()
+        dialog.child(name="Save").click()
+        filechooser = self._app().child(roleName="file chooser")
+        filechooser.button("Save").click()
+        dialog = self._app().child(roleName="alert")
+        dialog.child(name="Replace").click()
         # check that process actually exit
         self._process().wait(timeout=22)
