@@ -176,6 +176,18 @@ class PdfArrangerTest(unittest.TestCase):
     def _process(self):
         return self.__class__.pdfarranger.process
 
+    def _import_file(self, filename):
+        """Try to import a file with a file chooser and return that file chooser object"""
+        self._mainmenu("Import")
+        filechooser = self._app().child(roleName='file chooser')
+        treeview = filechooser.child(roleName="table", name="Files")
+        treeview.keyCombo("<ctrl>L")
+        treeview.typeText(os.path.abspath(filename))
+        ob = filechooser.button("Open")
+        self._wait_cond(lambda: ob.sensitive)
+        ob.click()
+        return filechooser
+
     @classmethod
     def setUpClass(cls):
         cls.pdfarranger = None
@@ -338,14 +350,7 @@ class TestBatch2(PdfArrangerTest):
         config.searchBackoffDuration = 0.1
 
     def test_02_import(self):
-        self._mainmenu("Import")
-        filechooser = self._app().child(roleName='file chooser')
-        treeview = filechooser.child(roleName="table", name="Files")
-        treeview.keyCombo("<ctrl>L")
-        treeview.typeText(os.path.abspath("tests/test.pdf"))
-        ob = filechooser.button("Open")
-        self._wait_cond(lambda: ob.sensitive)
-        ob.click()
+        filechooser = self._import_file("tests/test.pdf")
         self._wait_cond(lambda: filechooser.dead)
         self.assertEqual(len(self._icons()), 2)
 
@@ -399,6 +404,21 @@ class TestBatch3(PdfArrangerTest):
         passfield.text = "foobar"
         dialog.child(name="OK").click()
         self._wait_cond(lambda: dialog.dead)
+
+    def test_02_import_wrong_pass(self):
+        filename = os.path.join(self.__class__.tmp, "other_encrypted.pdf")
+        shutil.copyfile("tests/test_encrypted.pdf", filename)
+        filechooser = self._import_file(filename)
+        dialog = self._app().child(roleName="dialog")
+        passfield = dialog.child(roleName="password text")
+        passfield.text = "wrong"
+        dialog.child(name="OK").click()
+        dialog = self._app().child(roleName="dialog")
+        passfield = dialog.child(roleName="password text")
+        dialog.child(name="Cancel").click()
+        self._wait_cond(lambda: dialog.dead)
+        self._wait_cond(lambda: filechooser.dead)
+        self.assertEqual(len(self._icons()), 2)
 
     def test_03_quit(self):
         self._app().child(roleName="layered pane").keyCombo("<ctrl>q")
