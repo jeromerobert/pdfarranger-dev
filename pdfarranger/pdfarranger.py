@@ -119,7 +119,7 @@ from .config import Config
 from .core import img2pdf_supported_img, PageAdder, PDFDocError, PDFRenderer
 GObject.type_register(CellRendererImage)
 
-
+print(Gtk.accelerator_name(Gdk.KEY_Tab, 0))
 def _install_workaround_bug29():
     """ Install a workaround for https://gitlab.gnome.org/GNOME/pygobject/issues/29 """
     try:

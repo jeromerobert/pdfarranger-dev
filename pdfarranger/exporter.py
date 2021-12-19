@@ -91,7 +91,7 @@ def _scale(doc, page, factor):
         # unset it on the input page before
         rotate = page.Rotate
         page.Rotate = 0
-    page = doc.make_indirect(page)
+    #page = doc.make_indirect(page)
     page_id = len(doc.pages)
     newmediabox = [factor * float(x) for x in page.MediaBox]
     content = "q {} 0 0 {} 0 0 cm /p{} Do Q".format(factor, factor, page_id)
@@ -202,7 +202,11 @@ def export(input_files, pages, file_out, mode, mdata):
             outpdf.save(outname)
     else:
         _set_meta(mdata, pdf_input, pdf_output)
-        pdf_output.remove_unreferenced_resources()
+        try:
+            pdf_output.remove_unreferenced_resources()
+        except RuntimeError as err:
+            print(traceback.format_exc())
+            print("WARNING: "+str(err)+". pikepdf version too old.")
         pdf_output.save(file_out)
 
 def num_pages(filepath):
