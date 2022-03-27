@@ -24,7 +24,6 @@ import traceback
 from datetime import datetime
 from dateutil import parser
 import gi
-gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 _ = gettext.gettext
 

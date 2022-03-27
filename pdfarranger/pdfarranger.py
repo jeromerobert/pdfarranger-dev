@@ -86,19 +86,8 @@ import gi
 
 # check that we don't need GObject.threads_init()
 gi.check_version('3.10.2')
-gi.require_version('Gtk', '3.0')
-gi.require_version('Handy', '1')
+gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk
-from gi.repository import Handy
-
-if Gtk.check_version(3, 12, 0):
-    raise Exception('You do not have the required version of GTK+ installed. ' +
-                    'Installed GTK+ version is ' +
-                    '.'.join([str(Gtk.get_major_version()),
-                              str(Gtk.get_minor_version()),
-                              str(Gtk.get_micro_version())]) +
-                    '. Required GTK+ version is 3.12 or higher.')
-
 from gi.repository import Gdk
 from gi.repository import GObject  # for using custom signals
 from gi.repository import Gio  # for inquiring mime types information
