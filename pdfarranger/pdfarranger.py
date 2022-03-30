@@ -170,13 +170,8 @@ class PdfArranger(Gtk.Application):
     MODEL_ROW_EXTERN = 1002
     # Drag and drop ID for pages coming from a non-pdfarranger application
     TEXT_URI_LIST = 1003
-    TARGETS_IV = [Gtk.TargetEntry.new('MODEL_ROW_INTERN', Gtk.TargetFlags.SAME_WIDGET,
-                                      MODEL_ROW_INTERN),
-                  Gtk.TargetEntry.new('MODEL_ROW_EXTERN', Gtk.TargetFlags.OTHER_APP,
-                                      MODEL_ROW_EXTERN)]
-    TARGETS_SW = [Gtk.TargetEntry.new('text/uri-list', 0, TEXT_URI_LIST),
-                  Gtk.TargetEntry.new('MODEL_ROW_EXTERN', Gtk.TargetFlags.OTHER_APP,
-                                      MODEL_ROW_EXTERN)]
+    TARGETS_IV = []
+    TARGETS_SW = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, application_id="com.github.jeromerobert.pdfarranger",
@@ -230,7 +225,7 @@ class PdfArranger(Gtk.Application):
         self.vadj_percent = None
 
         # Clipboard for cut copy paste
-        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        self.clipboard = Gdk.Display.get_default().get_clipboard()
 
         self.add_arguments()
 
@@ -423,9 +418,7 @@ class PdfArranger(Gtk.Application):
         iconsdir = os.path.join(sharedir, 'icons')
         if not os.path.exists(iconsdir):
             iconsdir = os.path.join(sharedir, 'data', 'icons')
-        Gtk.IconTheme.get_default().append_search_path(iconsdir)
-        Handy.Window.set_default_icon_name(ICON_ID)
-        Handy.init()
+        Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).add_search_path(iconsdir)
         self.uiXML = self.__build_from_file(DOMAIN + '.ui')
         # Create the main window, and attach delete_event signal to terminating
         # the application
