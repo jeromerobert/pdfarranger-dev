@@ -87,9 +87,14 @@ import gi
 # check that we don't need GObject.threads_init()
 gi.check_version('3.10.2')
 gi.require_version('Gtk', '3.0')
-gi.require_version('Handy', '1')
 from gi.repository import Gtk
-from gi.repository import Handy
+try:
+    gi.require_version('Handy', '1')
+    from gi.repository import Handy
+    Window, ApplicationWindow = Handy.Window, Handy.ApplicationWindow
+except:
+    Handy = None
+    Window, ApplicationWindow = Gtk.Window, Gtk.ApplicationWindow
 
 if Gtk.check_version(3, 12, 0):
     raise Exception('You do not have the required version of GTK+ installed. ' +
@@ -137,7 +142,7 @@ def _install_workaround_bug29():
                 action.connect("activate", d[1], None)
                 self.add_action(action)
 
-        Handy.ApplicationWindow.add_action_entries = func
+        ApplicationWindow.add_action_entries = func
 
 
 _install_workaround_bug29()
@@ -435,8 +440,10 @@ class PdfArranger(Gtk.Application):
         if not os.path.exists(iconsdir):
             iconsdir = os.path.join(sharedir, 'data', 'icons')
         Gtk.IconTheme.get_default().append_search_path(iconsdir)
-        Handy.Window.set_default_icon_name(ICON_ID)
-        Handy.init()
+        Window.set_default_icon_name(ICON_ID)
+        if Handy:
+            Handy.init()
+            Handy.StyleManager.get_default().set_color_scheme(Handy.ColorScheme.PREFER_LIGHT)
         self.uiXML = self.__build_from_file(DOMAIN + '.ui')
         # Create the main window, and attach delete_event signal to terminating
         # the application
