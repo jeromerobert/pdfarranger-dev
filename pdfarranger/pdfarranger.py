@@ -452,6 +452,10 @@ class PdfArranger(Gtk.Application):
         self.uiXML = self.__build_from_file(DOMAIN + '.ui')
         # Create the main window, and attach delete_event signal to terminating
         # the application
+        # FIXME: do not use main_window (remove the id) but create a a GtkApplicationWindow
+        # or HdyApplicationWindow, get header_bar and main_box and add them
+        # For HdyApplicationWindow add an intermediate GtkBox. Replace GtkHeaderBar by
+        # before parsing ?
         self.window = self.uiXML.get_object('main_window')
         self.uiXML.get_object('header_bar').set_title(APPNAME)
         self.window.set_border_width(0)
