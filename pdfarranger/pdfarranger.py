@@ -289,7 +289,12 @@ class PdfArranger(Gtk.Application):
             f = '/usr/local/share/{}/{}'.format(DOMAIN, path)
         b = Gtk.Builder()
         b.set_translation_domain(DOMAIN)
-        b.add_from_file(f)
+        with open(f) as ff:
+            s = ff.read()
+            if not Handy:
+                s = s.replace("HdyApplicationWindow", "GtkApplicationWindow")
+                s = s.replace("HdyHeaderBar", "GtkHeaderBar")
+            b.add_from_string(s)
         b.connect_signals(self)
         return b
 
