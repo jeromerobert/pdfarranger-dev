@@ -21,8 +21,12 @@ import traceback
 import sys
 import warnings
 import tempfile
+import io
+import gi
 from . import metadata
 from gi.repository import Gtk
+gi.require_version("Poppler", "0.18")
+from gi.repository import Poppler
 import gettext
 _ = gettext.gettext
 
@@ -205,7 +209,7 @@ def export(files, pages, mdata, exportmode, file_out, quit_flag, _export_msg):
     copied_pages = {}
     # Copy pages from the input PDF files to the output PDF file
     for row in pages:
-        if quit_flag.is_set():
+        if quit_flag is not None and quit_flag.is_set():
             return
         current_page = pdf_input[row.nfile - 1].pages[row.npage - 1]
         # if the page already exists in the output PDF, duplicate it
@@ -228,7 +232,7 @@ def export(files, pages, mdata, exportmode, file_out, quit_flag, _export_msg):
 
     # Apply geometrical transformations in the output PDF file
     for page_id, row in enumerate(pages):
-        if quit_flag.is_set():
+        if quit_flag is not None and quit_flag.is_set():
             return
         pdf_output.pages[page_id] = _apply_geom_transform(
             pdf_output, pdf_output.pages[page_id], row
@@ -237,7 +241,7 @@ def export(files, pages, mdata, exportmode, file_out, quit_flag, _export_msg):
     mdata = metadata.merge(mdata, files)
     if exportmode in ['ALL_TO_MULTIPLE', 'SELECTED_TO_MULTIPLE']:
         for n, page in enumerate(pdf_output.pages):
-            if quit_flag.is_set():
+            if quit_flag is not None and quit_flag.is_set():
                 return
             outpdf = pikepdf.Pdf.new()
             _set_meta(mdata, pdf_input, outpdf)
@@ -320,3 +324,37 @@ def generate_booklet(pdfqueue, tmp_dir, pages):
     file.save(filename)
     return filename
 
+
+# Adapted from https://stackoverflow.com/questions/28325525/python-gtk-printoperation-print-a-pdf
+class PrintOperation(Gtk.PrintOperation):
+    def __init__(self, app):
+        super().__init__()
+        self.app = app
+        self.connect('begin-print', self.begin_print, None)
+        self.connect('draw-page', self.draw_page, None)
+
+    def begin_print(self, operation, print_ctx, print_data):
+        self.set_n_pages(len(self.app.model))
+
+    def draw_page(self, operation, print_ctx, page_num, print_data):
+        p = self.app.model[page_num][0]
+        if p.unmodified():
+            pdfdoc = self.app.pdfqueue[p.nfile - 1]
+            page = pdfdoc.document.get_page(p.npage - 1)
+        else:
+            buf = io.BytesIO()
+            files = [(pdf.copyname, pdf.password) for pdf in self.app.pdfqueue]
+            export(files, [p], {}, None, buf, None, None)
+            page = Poppler.Document.new_from_data(buf.getvalue()).get_page(0)
+        page.render_for_printing(print_ctx.get_cairo_context())
+
+    def run(self):
+        result = super().run(Gtk.PrintOperationAction.PRINT_DIALOG, self.app.window)
+        if result == Gtk.PrintOperationResult.ERROR:
+            dialog = Gtk.MessageDialog(self.app.window,
+                                       0,
+                                       Gtk.MessageType.ERROR,
+                                       Gtk.ButtonsType.CLOSE,
+                                       self.get_error())
+            dialog.run()
+            dialog.destroy()

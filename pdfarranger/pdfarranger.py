@@ -372,6 +372,7 @@ class PdfArranger(Gtk.Application):
             ('about', self.about_dialog),
             ("insert-blank-page", self.insert_blank_page),
             ("generate-booklet", self.generate_booklet),
+            ("print", self.on_action_print),
         ]
         self.window.add_action_entries(self.actions)
 
@@ -437,6 +438,8 @@ class PdfArranger(Gtk.Application):
         self.clear_selected(add_to_undomanager=False)
         self.silent_render()
 
+    def on_action_print(self, _action, _option, _unknown):
+        exporter.PrintOperation(self).run()
 
     @staticmethod
     def __create_filters(file_type_list):
@@ -2279,7 +2282,7 @@ class PdfArranger(Gtk.Application):
             msg += " | "+_("Page Size:")+ " {:.1f}mm \u00D7 {:.1f}mm".format(*pagesize)
         self.status_bar.push(ctxt_id, msg)
 
-        for a in ["save", "save-as", "select", "export-all", "zoom-fit"]:
+        for a in ["save", "save-as", "select", "export-all", "zoom-fit", "print"]:
             self.window.lookup_action(a).set_enabled(num_pages > 0)
 
     def error_message_dialog(self, msg):
