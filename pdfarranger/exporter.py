@@ -202,10 +202,11 @@ def export_process(*args, **kwargs):
     """Export PDF in a separate process."""
     warn_dialog(export)(*args, **kwargs)
 
-def export(files, pages, mdata, exportmode, file_out, quit_flag, _export_msg):
+
+def export_doc(pdf_input, pages, mdata, exportmode, file_out, quit_flag):
+    """Same as export() but with pikepdf.PDF objects instead of files"""
     global _report_pikepdf_err
     pdf_output = pikepdf.Pdf.new()
-    pdf_input = [pikepdf.open(copyname, password=password) for copyname, password in files]
     copied_pages = {}
     # Copy pages from the input PDF files to the output PDF file
     for row in pages:
@@ -238,7 +239,7 @@ def export(files, pages, mdata, exportmode, file_out, quit_flag, _export_msg):
             pdf_output, pdf_output.pages[page_id], row
         )
 
-    mdata = metadata.merge(mdata, files)
+    mdata = metadata.merge_doc(mdata, pdf_input)
     if exportmode in ['ALL_TO_MULTIPLE', 'SELECTED_TO_MULTIPLE']:
         for n, page in enumerate(pdf_output.pages):
             if quit_flag is not None and quit_flag.is_set():
@@ -260,6 +261,14 @@ def export(files, pages, mdata, exportmode, file_out, quit_flag, _export_msg):
         _set_meta(mdata, pdf_input, pdf_output)
         _remove_unreferenced_resources(pdf_output)
         pdf_output.save(file_out)
+
+
+def export(files, pages, mdata, exportmode, file_out, quit_flag, _export_msg):
+    pdf_input = [
+        pikepdf.open(copyname, password=password) for copyname, password in files
+    ]
+    export_doc(pdf_input, pages, mdata, exportmode, file_out, quit_flag)
+
 
 def num_pages(filepath):
     """Get number of pages for filepath."""
@@ -330,31 +339,49 @@ class PrintOperation(Gtk.PrintOperation):
     def __init__(self, app):
         super().__init__()
         self.app = app
-        self.connect('begin-print', self.begin_print, None)
-        self.connect('draw-page', self.draw_page, None)
+        self.connect("begin-print", self.begin_print, None)
+        self.connect("end-print", self.end_print, None)
+        self.connect("draw-page", self.draw_page, None)
+        self.pdf_input = None
 
     def begin_print(self, operation, print_ctx, print_data):
         self.set_n_pages(len(self.app.model))
+        self.app.set_export_state(True)
+        self.pdf_input = [None] * len(self.app.pdfqueue)
+        for row in self.app.model:
+            if row[0].unmodified():
+                continue
+            i = row[0].nfile - 1
+            if self.pdf_input[i] is not None:
+                continue
+            pdf = self.app.pdfqueue[i]
+            self.pdf_input[i] = pikepdf.open(pdf.copyname, password=pdf.password)
+
+    def end_print(self, operation, print_ctx, print_data):
+        self.app.set_export_state(False)
 
     def draw_page(self, operation, print_ctx, page_num, print_data):
         p = self.app.model[page_num][0]
         if p.unmodified():
             pdfdoc = self.app.pdfqueue[p.nfile - 1]
             page = pdfdoc.document.get_page(p.npage - 1)
+            with pdfdoc.render_lock:
+                page.render_for_printing(print_ctx.get_cairo_context())
         else:
             buf = io.BytesIO()
-            files = [(pdf.copyname, pdf.password) for pdf in self.app.pdfqueue]
-            export(files, [p], {}, None, buf, None, None)
+            export_doc([self.pdf_input[p.nfile - 1]], [p], {}, None, buf, None)
             page = Poppler.Document.new_from_data(buf.getvalue()).get_page(0)
-        page.render_for_printing(print_ctx.get_cairo_context())
+            page.render_for_printing(print_ctx.get_cairo_context())
 
     def run(self):
         result = super().run(Gtk.PrintOperationAction.PRINT_DIALOG, self.app.window)
         if result == Gtk.PrintOperationResult.ERROR:
-            dialog = Gtk.MessageDialog(self.app.window,
-                                       0,
-                                       Gtk.MessageType.ERROR,
-                                       Gtk.ButtonsType.CLOSE,
-                                       self.get_error())
+            dialog = Gtk.MessageDialog(
+                self.app.window,
+                0,
+                Gtk.MessageType.ERROR,
+                Gtk.ButtonsType.CLOSE,
+                self.get_error(),
+            )
             dialog.run()
             dialog.destroy()
