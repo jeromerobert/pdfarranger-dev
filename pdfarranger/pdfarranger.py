@@ -242,6 +242,9 @@ class PdfArranger(Gtk.Application):
         self.window_width_old = 0
         self.set_iv_visible_id = None
         self.vadj_percent = None
+        self.disable_quit = False
+        multiprocessing.set_start_method('spawn')
+        self.quit_flag = multiprocessing.Event()
 
         # Clipboard for cut copy paste
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
@@ -951,6 +954,8 @@ class PdfArranger(Gtk.Application):
         malloc_trim()
 
     def on_quit(self, _action, _param=None, _unknown=None):
+        if self.disable_quit:
+            return True
         if self.export_process and self.export_process.is_alive():
             msg = _('Abort saving and quit?')
             confirm = self.confirm_dialog(msg, action=_('_Quit'))
@@ -979,13 +984,13 @@ class PdfArranger(Gtk.Application):
 
     def close_application(self, _widget=None, _event=None, _data=None):
         """Termination"""
+        self.quit_flag.set()
         if self.rendering_thread:
             self.rendering_thread.quit = True
             self.rendering_thread.join()
             self.rendering_thread.pdfqueue = []
 
         if self.export_process:
-            self.quit_flag.set()
             self.export_process.join(timeout=2)
             if self.export_process.is_alive():
                 self.export_process.terminate()
@@ -1146,9 +1151,6 @@ class PdfArranger(Gtk.Application):
                 return # Abort
 
         files = [(pdf.copyname, pdf.password) for pdf in self.pdfqueue]
-        if not self.export_process:
-            multiprocessing.set_start_method('spawn')
-        self.quit_flag = multiprocessing.Event()
         export_msg = multiprocessing.Queue()
         a = files, pages, self.metadata, exportmode, file_out, self.quit_flag, export_msg
         self.export_process = multiprocessing.Process(target=exporter.export_process, args=a)
@@ -1198,18 +1200,21 @@ class PdfArranger(Gtk.Application):
                 self.close_application()
         self.post_action = None
 
-    def set_export_state(self, enable):
+    def set_export_state(self, enable, message=_("Saving…")):
         """Enable/disable app export state.
 
         When enabled app is moveable, resizable and closeable but does not respond to other input.
         """
+        if self.quit_flag.is_set():
+            return
         self.sw.set_sensitive(not enable)
         self.main_menu.set_sensitive(not enable)
+        self.disable_quit = enable
         for a in self.actions:
             self.window.lookup_action(a[0]).set_enabled(not enable)
         ctxt_id = self.status_bar2.get_context_id("saving")
         if enable:
-            self.status_bar2.push(ctxt_id, _('Saving…'))
+            self.status_bar2.push(ctxt_id, message)
             cursor = Gdk.Cursor.new_from_name(Gdk.Display.get_default(), 'wait')
             self.quit_rendering()
         else:

@@ -336,17 +336,23 @@ def generate_booklet(pdfqueue, tmp_dir, pages):
 
 # Adapted from https://stackoverflow.com/questions/28325525/python-gtk-printoperation-print-a-pdf
 class PrintOperation(Gtk.PrintOperation):
+    MESSAGE=_("Printing…")
     def __init__(self, app):
         super().__init__()
         self.app = app
         self.connect("begin-print", self.begin_print, None)
         self.connect("end-print", self.end_print, None)
         self.connect("draw-page", self.draw_page, None)
+        self.connect("preview", self.preview, None)
         self.pdf_input = None
+        self.message = self.MESSAGE
+
+    def preview(self, operation, preview_op, print_ctx, parent, user_data):
+        self.message = _("Rendering Preview…")
 
     def begin_print(self, operation, print_ctx, print_data):
         self.set_n_pages(len(self.app.model))
-        self.app.set_export_state(True)
+        self.app.set_export_state(True, self.message)
         self.pdf_input = [None] * len(self.app.pdfqueue)
         for row in self.app.model:
             if row[0].unmodified():
@@ -359,8 +365,11 @@ class PrintOperation(Gtk.PrintOperation):
 
     def end_print(self, operation, print_ctx, print_data):
         self.app.set_export_state(False)
+        self.message = self.MESSAGE
 
     def draw_page(self, operation, print_ctx, page_num, print_data):
+        if page_num >= len(self.app.model):
+            return
         p = self.app.model[page_num][0]
         if p.unmodified():
             pdfdoc = self.app.pdfqueue[p.nfile - 1]
