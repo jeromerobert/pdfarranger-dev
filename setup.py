@@ -21,15 +21,8 @@
 #
 
 from setuptools import setup
-from DistUtilsExtra.command import (
-    build_i18n, clean_i18n, build_extra, build_icons)
-
-data_files = [
-    ('share/applications', ['data/com.github.jeromerobert.pdfarranger.desktop']),
-    ('share/pdfarranger', ['data/pdfarranger.ui', 'data/menu.ui']),
-    ('share/man/man1', ['doc/pdfarranger.1']),
-    ('share/metainfo', ['data/com.github.jeromerobert.pdfarranger.metainfo.xml']),
-]
+# Add subcommands to build, clean and install
+from pdfarranger import build_helper
 
 setup(
     name='pdfarranger',
@@ -40,13 +33,10 @@ setup(
     url='https://github.com/pdfarranger/pdfarranger',
     license='GNU GPL-3',
     packages=['pdfarranger'],
-    data_files=data_files,
     zip_safe=False,
     cmdclass={
-        "build": build_extra.build_extra,
-        "build_i18n": build_i18n.build_i18n,
-        "clean_i18n": clean_i18n.clean_i18n,
-        "build_icons": build_icons.build_icons,
+        "build_mo": build_helper.build_mo,
+        "build_others": build_helper.build_others,
     },
     entry_points={
         'console_scripts': ['pdfarranger=pdfarranger.pdfarranger:main']
