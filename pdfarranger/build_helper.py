@@ -75,5 +75,37 @@ class build_others(setuptools.Command):
         data_files.extend(_dir_to_data_files(src_mo, tgt_mo))
 
 
+class install_others(setuptools.Command):
+    description = "Install icons, gettext and freedesktop files"
+
+    def initialize_options(self):
+        self.install_base = None
+        self.build_base = None
+        self.outfiles = []
+
+    def finalize_options(self):
+        self.set_undefined_options("install", ("install_base", "install_base"))
+        self.set_undefined_options("build", ("build_base", "build_base"))
+
+    def run(self):
+        share_dir = join(self.install_base, "share")
+        src_icons = join("data", "icons")
+        src_mo = join(self.build_base, "mo")
+        # data_files has been removed so we manually copy files at their
+        # installation location. pip uninstall will not work properly. This is
+        # because the will of PyPA is that pip / setuptools are only used to
+        # manage files in site-package folder. For GTK applications this is
+        # impossible.
+        tgt_icons = join(share_dir, "icons")
+        tgt_mo = join(share_dir, "locale")
+        for dst, src in SHARE_FILES:
+            dst_dir = join(share_dir, dst)
+            os.makedirs(dst_dir, exist_ok=True)
+            shutil.copy(join(*src), join(dst_dir, src[-1]))
+        shutil.copytree(src_icons, tgt_icons, dirs_exist_ok=True)
+        shutil.copytree(src_mo, tgt_mo, dirs_exist_ok=True)
+
+
 build.sub_commands.append(("build_mo", lambda _: True))
 build.sub_commands.append(("build_others", lambda _: True))
+install.sub_commands.append(("install_others", lambda _: True))

@@ -1,0 +1,24 @@
+[project]
+name = "pdfarranger"
+version = "1.9.2"
+dependencies = ["pikepdf>=1.17.0", "python-dateutil>=2.4.0"]
+license = { file = "COPYING"}
+description = "A simple application for PDF Merging, Rearranging, and Splitting"
+
+[project.urls]
+Homepage = "https://github.com/pdfarranger/pdfarranger"
+
+[project.scripts]
+pdfarranger = "pdfarranger.pdfarranger:main"
+
+[project.optional-dependencies]
+image = [ "img2pdf>=0.3.4" ]
+
+[project.entry-points."distutils.commands"]
+build_mo = "pdfarranger.build_helper:build_mo"
+install_data = "pdfarranger.build_helper:install_data"
+
+[tool.setuptools]
+packages = [ "pdfarranger" ]
+zip-safe = false
+include-package-data = false
