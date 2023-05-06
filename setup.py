@@ -22,11 +22,7 @@
 
 from setuptools import Command
 from setuptools import setup
-try:
-    from setuptools.command.build import build
-except ModuleNotFoundError:
-    # setuptools too old
-    from distutils.command.build import build
+from distutils.command.build import build
 
 from os.path import join
 import glob
