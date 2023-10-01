@@ -14,6 +14,8 @@ jobs:
     - run: apk upgrade python3
     - run: ./setup.py build -v
     - run: find build
+    - run: ./setup.py build_i18n -v
+    - run: find build
     - run: HOME=/root wine python setup_win32.py bdist_msi
     - run: HOME=/root wine python setup_win32.py bdist_zip
     - uses: actions/upload-artifact@v3

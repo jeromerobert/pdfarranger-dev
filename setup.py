@@ -30,7 +30,9 @@ if setuptools_version < (65, 2):
     from distutils.command.build import build
 else:
     from setuptools.command.build import build
-
+import sys
+print("setuptools_version=", setuptools_version)
+print(sys.version_info)
 from os.path import join
 import glob
 import os
@@ -64,7 +66,7 @@ def _data_files(command):
 
 class build_i18n(Command):
     description = "Build gettext .mo files"
-
+    user_options = []
     def initialize_options(self):
         self.build_base = None
 
