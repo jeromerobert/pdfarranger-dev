@@ -11,7 +11,6 @@ jobs:
       options: --user root
     steps:
     - uses: actions/checkout@v3
-    - run: apk del py3-distutils-extra
     - run: cp cmd.py /usr/lib/python3.10/site-packages/setuptools/_distutils/cmd.py && ./setup.py build -v
     - run: find build
     - run: cp cmd.py /usr/lib/python3.10/site-packages/setuptools/_distutils/cmd.py && ./setup.py build_i18n -v

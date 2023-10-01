@@ -20,20 +20,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+import setuptools
 from setuptools import Command
 from setuptools import setup
-from setuptools import __version__ as setuptools_version
 
-# support distros that ship old setuptools
-setuptools_version = tuple(int(n) for n in setuptools_version.split('.')[:2])
-if setuptools_version < (65, 2):
-    from distutils.command.build import build
-else:
-    from setuptools.command.build import build
-
-import sys
-print("setuptools_version=", setuptools_version)
-print(sys.version_info)
 from os.path import join
 import glob
 import os
@@ -103,8 +93,7 @@ class build_icons(Command):
         data_files = _data_files(self)
         data_files += _dir_to_data_files(src_icons, tgt_icons)
 
-
-build.sub_commands += [(x, lambda _: True) for x in ["build_i18n", "build_icons"]]
+setuptools.command.build.sub_commands += [(x, lambda _: True) for x in ["build_i18n", "build_icons"]]
 
 setup(
     name='pdfarranger',
@@ -118,6 +107,7 @@ setup(
     data_files=data_files,
     zip_safe=False,
     cmdclass={
+        "build": setuptools.command.build,
         "build_i18n": build_i18n,
         "build_icons": build_icons,
     },
