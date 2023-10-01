@@ -64,7 +64,7 @@ def _data_files(command):
 
 class build_i18n(Command):
     description = "Build gettext .mo files"
-
+    user_options = []
     def initialize_options(self):
         self.build_base = None
 
@@ -77,15 +77,16 @@ class build_i18n(Command):
             lang = os.path.basename(filename)[:-3]
             lang_dir = join(self.build_base, "mo", lang, "LC_MESSAGES")
             os.makedirs(lang_dir, exist_ok=True)
-            subprocess.check_call(
-                ["msgfmt", filename, "-o", join(lang_dir, "pdfarranger.mo")]
-            )
+            cmd = ["msgfmt", filename, "-o", join(lang_dir, "pdfarranger.mo")]
+            print(" ".join(cmd))
+            subprocess.check_call(cmd)
         data_files = _data_files(self)
         data_files += _dir_to_data_files(mo_dir, join("share", "locale"))
 
 
 class build_icons(Command):
     description = "Ensure icons get installed"
+    user_options = []
 
     def initialize_options(self):
         pass
@@ -114,6 +115,7 @@ setup(
     data_files=data_files,
     zip_safe=False,
     cmdclass={
+        "build": setuptools.command.build,
         "build_i18n": build_i18n,
         "build_icons": build_icons,
     },

@@ -11,14 +11,7 @@ jobs:
       options: --user root
     steps:
     - uses: actions/checkout@v3
-    - run: ./setup.py build
-    - run: HOME=/root wine python setup_win32.py bdist_msi
-    - run: HOME=/root wine python setup_win32.py bdist_zip
-    - uses: actions/upload-artifact@v3
-      with:
-        name: pdfarranger-windows-installer-msi
-        path: dist/*.msi
-    - uses: actions/upload-artifact@v3
-      with:
-        name: pdfarranger-windows-portable-zip
-        path: dist/*.zip
+    - run: cp cmd.py /usr/lib/python3.10/site-packages/setuptools/_distutils/cmd.py && ./setup.py build -v
+    - run: find build
+    - run: cp cmd.py /usr/lib/python3.10/site-packages/setuptools/_distutils/cmd.py && ./setup.py build_i18n -v
+    - run: find build

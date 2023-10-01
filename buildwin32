@@ -1,0 +1,16 @@
+#! /bin/sh -ex
+
+mydocker() {
+  podman run -v local:/root/.wine/drive_c/users/root/.local \
+    -v $PWD:/pdfarranger -w /pdfarranger -it jeromerobert/wine-mingw64:1.8.1 "$@"
+}
+pythonwin32() {
+  mydocker wine cmd /c z:/mingw64/bin/python "$@"
+}
+#mydocker env
+#mydocker
+#mydocker ./setup.py build -v -v -v
+#mydocker ./setup.py build_icons
+mydocker ./setup.py build -v
+#pythonwin32 setup_win32.py bdist_msi
+#pythonwin32 setup_win32.py bdist_zip
