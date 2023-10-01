@@ -11,6 +11,7 @@ jobs:
       options: --user root
     steps:
     - uses: actions/checkout@v3
+    - run: apk upgrade python3
     - run: ./setup.py build -v
     - run: find build
     - run: HOME=/root wine python setup_win32.py bdist_msi
