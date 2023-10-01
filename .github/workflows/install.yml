@@ -11,7 +11,8 @@ jobs:
       options: --user root
     steps:
     - uses: actions/checkout@v3
-    - run: ./setup.py build
+    - run: ./setup.py build -v
+    - run: find build
     - run: HOME=/root wine python setup_win32.py bdist_msi
     - run: HOME=/root wine python setup_win32.py bdist_zip
     - uses: actions/upload-artifact@v3

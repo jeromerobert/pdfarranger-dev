@@ -77,9 +77,9 @@ class build_i18n(Command):
             lang = os.path.basename(filename)[:-3]
             lang_dir = join(self.build_base, "mo", lang, "LC_MESSAGES")
             os.makedirs(lang_dir, exist_ok=True)
-            subprocess.check_call(
-                ["msgfmt", filename, "-o", join(lang_dir, "pdfarranger.mo")]
-            )
+            cmd = ["msgfmt", filename, "-o", join(lang_dir, "pdfarranger.mo")]
+            print(" ".join(cmd))
+            subprocess.check_call(cmd)
         data_files = _data_files(self)
         data_files += _dir_to_data_files(mo_dir, join("share", "locale"))
 
