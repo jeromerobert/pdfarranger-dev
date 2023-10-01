@@ -115,7 +115,7 @@ setup(
     data_files=data_files,
     zip_safe=False,
     cmdclass={
-        "build": setuptools.command.build,
+        "build": build,
         "build_i18n": build_i18n,
         "build_icons": build_icons,
     },

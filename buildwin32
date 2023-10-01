@@ -8,9 +8,10 @@ pythonwin32() {
   mydocker wine cmd /c z:/mingw64/bin/python "$@"
 }
 #mydocker env
-#mydocker
+mydocker
 #mydocker ./setup.py build -v -v -v
 #mydocker ./setup.py build_icons
-mydocker ./setup.py build -v
+#mydocker ./setup.py build -v
+#rm -rf build && mydocker python3 -m build
 #pythonwin32 setup_win32.py bdist_msi
 #pythonwin32 setup_win32.py bdist_zip
