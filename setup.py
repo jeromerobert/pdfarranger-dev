@@ -30,6 +30,7 @@ if setuptools_version < (65, 2):
     from distutils.command.build import build
 else:
     from setuptools.command.build import build
+
 import sys
 print("setuptools_version=", setuptools_version)
 print(sys.version_info)
@@ -88,6 +89,7 @@ class build_i18n(Command):
 
 class build_icons(Command):
     description = "Ensure icons get installed"
+    user_options = []
 
     def initialize_options(self):
         pass
