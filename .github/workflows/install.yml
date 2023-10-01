@@ -10,8 +10,9 @@ jobs:
       image: jeromerobert/wine-mingw64:1.8.1
       options: --user root
     steps:
+    - run: apk add py3-pip git
     - uses: actions/checkout@v3
-    - run: apk add py3-pip
+    - run: env
     - run: pip install --upgrade setuptools
     - run: HOME=/root ./setup.py build -v
     - run: find build
