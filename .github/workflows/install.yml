@@ -11,7 +11,7 @@ jobs:
       options: --user root
     steps:
     - uses: actions/checkout@v3
-    - run: apk install py3-pip
+    - run: apk add py3-pip
     - run: pip install --upgrade setuptools
     - run: HOME=/root ./setup.py build -v
     - run: find build
